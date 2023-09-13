@@ -1,0 +1,55 @@
+org: creativogee
+app: project-hilda
+service: ${self:app}-http-api
+frameworkVersion: '3'
+custom:
+  APP_NAME: ${self:app}-${sls:stage}
+  SERVICE_NAME: ${self:service}-${sls:stage}
+  BUCKET_NAME: sagemaker-${self:app}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-organizations
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-billings
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource: arn:aws:s3:::${self:custom.BUCKET_NAME}/*
+
+  environment:
+    APP_NAME: ${self:custom.APP_NAME}
+    SERVICE_NAME: ${self:custom.SERVICE_NAME}
+    BUCKET_NAME: ${self:custom.BUCKET_NAME}
+
+functions:
+  mutate:
+    handler: handlers/mutate.handler
+    events:
+      - httpApi:
+          path: /mutate
+          method: post
+  
+  onboarding:
+    handler: handlers/onboarding.handler
+    events:
+      - httpApi:
+          path: /onboarding
+          method: post
