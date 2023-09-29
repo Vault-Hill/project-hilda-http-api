@@ -20,6 +20,7 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
+            - dynamodb:Scan
           Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-organizations
         - Effect: Allow
           Action:
@@ -27,11 +28,13 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
+            - dynamodb:Scan
           Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-billings
         - Effect: Allow
           Action:
             - s3:PutObject
             - s3:GetObject
+            - s3:PutObjectAcl
           Resource: arn:aws:s3:::${self:custom.BUCKET_NAME}/*
 
   environment:
@@ -40,16 +43,44 @@ provider:
     BUCKET_NAME: ${self:custom.BUCKET_NAME}
 
 functions:
-  mutate:
-    handler: handlers/mutate.handler
+  updateProfile:
+    handler: handlers/updateProfile.handler
     events:
       - httpApi:
-          path: /mutate
+          path: /profile
           method: post
-  
+
+  getProfile:
+    handler: handlers/getProfile.handler
+    events:
+      - httpApi:
+          path: /profile
+          method: get
+
   onboarding:
     handler: handlers/onboarding.handler
     events:
       - httpApi:
           path: /onboarding
           method: post
+
+  getPresignedURL:
+    handler: handlers/getPresignedURL.handler
+    events:
+      - httpApi:
+          path: /presigned-url
+          method: get
+
+  login:
+    handler: handlers/login.handler
+    events:
+      - httpApi:
+          path: /login
+          method: post
+
+  getAccessKey:
+    handler: handlers/getAccessKey.handler
+    events:
+      - httpApi:
+          path: /access-key
+          method: get

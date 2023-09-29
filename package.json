@@ -1,6 +1,17 @@
 {
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.410.0",
-    "@aws-sdk/client-s3": "^3.410.0"
+    "@aws-sdk/client-s3": "^3.410.0",
+    "@aws-sdk/s3-request-presigner": "^3.421.0",
+    "bcryptjs": "^2.4.3",
+    "crypto-js": "^4.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "mime": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.4",
+    "@types/crypto-js": "^4.1.2",
+    "@types/jsonwebtoken": "^9.0.3",
+    "@types/mime": "^3.0.2"
   }
 }
