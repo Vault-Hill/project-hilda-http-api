@@ -64,6 +64,10 @@ module.exports.handler = async (event) => {
 
   return {
     statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': 'https://develop.d1d66d68ewa2dw.amplifyapp.com',
+      'Access-Control-Allow-Credentials': 'true',
+    },
     body: JSON.stringify({
       accessKey,
     }),

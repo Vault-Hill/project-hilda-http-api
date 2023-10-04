@@ -50,8 +50,8 @@ module.exports.handler = async (event, context) => {
 
   const { accessToken, expiryDate } = generateAccessToken(organization);
   const { refreshToken, expirySeconds } = generateRefreshToken(organization);
-
-  const cookie = `refreshToken=${refreshToken}; HttpOnly; Secure; Max-Age=${expirySeconds};`;
+  //  Max-Age=${expirySeconds};
+  const cookie = `refreshToken=${refreshToken}; HttpOnly; SameSite=Lax; Secure; Max-Age=${expirySeconds};`;
 
   console.log('COOKIE: ', cookie);
   await dynamoDBClient.send(
@@ -76,9 +76,12 @@ module.exports.handler = async (event, context) => {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Set-Cookie': cookie,
+      'Access-Control-Allow-Origin': 'https://develop.d1d66d68ewa2dw.amplifyapp.com',
+      'Access-Control-Allow-Credentials': 'true',
     },
     body: JSON.stringify({
       accessExpiry: expiryDate,
+      accessToken,
     }),
   };
 };

@@ -10,6 +10,23 @@ custom:
 provider:
   name: aws
   runtime: nodejs18.x
+  httpApi:
+    cors:
+      allowedOrigins:
+        - 'https://develop.d1d66d68ewa2dw.amplifyapp.com'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Api-Key
+        - Access-Control-Allow-Origin
+        - Access-Control-Allow-Headers
+        - Access-Control-Allow-Methods
+        - Access-Control-Allow-Credentials
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - OPTIONS
 
   iam:
     role:

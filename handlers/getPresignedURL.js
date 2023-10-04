@@ -3,7 +3,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { authenticate } = require('../helpers/authenticate');
 
 module.exports.handler = async (event, context) => {
-  const authorization = event.headers.Authorization ?? event.headers.authorization ?? ''
+  const authorization = event.headers.Authorization ?? event.headers.authorization ?? '';
   const accessToken = authorization.split(' ')[1];
 
   if (!accessToken) {

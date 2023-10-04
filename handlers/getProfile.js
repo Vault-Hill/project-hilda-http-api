@@ -1,7 +1,10 @@
 const { DynamoDBClient, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { authenticate } = require('../helpers/authenticate');
+const { convertResponse, formatResponse } = require('../helpers/formatResponse');
 
 module.exports.handler = async (event, context) => {
-  const accessToken = event.headers.Authorization.split(' ')[1];
+  const authorization = event.headers.Authorization ?? event.headers.authorization ?? '';
+  const accessToken = authorization.split(' ')[1];
 
   if (!accessToken) {
     return {
@@ -27,14 +30,17 @@ module.exports.handler = async (event, context) => {
     }),
   );
 
-  delete organization.apiKey;
   delete organization.password;
   delete organization.salt;
 
   return {
     statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': 'https://develop.d1d66d68ewa2dw.amplifyapp.com',
+      'Access-Control-Allow-Credentials': 'true',
+    },
     body: JSON.stringify({
-      organization,
+      organization: formatResponse(organization),
     }),
   };
 };

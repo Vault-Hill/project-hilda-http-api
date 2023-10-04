@@ -2,7 +2,8 @@ const { DynamoDBClient, UpdateItemCommand } = require('@aws-sdk/client-dynamodb'
 const { authenticate } = require('../helpers/authenticate');
 
 module.exports.handler = async (event, context) => {
-  const accessToken = event.headers.Authorization.split(' ')[1];
+  const authorization = event.headers.Authorization ?? event.headers.authorization ?? '';
+  const accessToken = authorization.split(' ')[1];
 
   if (!accessToken) {
     return {
@@ -45,6 +46,10 @@ module.exports.handler = async (event, context) => {
 
   return {
     statusCode: 201,
+    headers: {
+      'Access-Control-Allow-Origin': 'https://develop.d1d66d68ewa2dw.amplifyapp.com',
+      'Access-Control-Allow-Credentials': 'true',
+    },
     body: JSON.stringify({
       message: 'Update successful',
     }),

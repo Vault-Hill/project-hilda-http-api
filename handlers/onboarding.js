@@ -6,6 +6,7 @@ const {
 } = require('@aws-sdk/client-dynamodb');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { hashPassword } = require('../helpers/hashPassword');
+const { v4: uuidv4 } = require('uuid');
 
 const dynamoDBClient = new DynamoDBClient();
 const bucketClient = new S3Client();
@@ -16,7 +17,9 @@ module.exports.handler = async (event, context) => {
 
     validateFields(body);
 
-    await Promise.all([checkExistence(body), verifyApiKey(body.apiKey)]);
+    const orgId = uuidv4();
+
+    await checkExistence({ orgId, email: body.email });
 
     const { salt, hashedPassword } = hashPassword(body.password);
 
@@ -35,8 +38,9 @@ module.exports.handler = async (event, context) => {
       new PutItemCommand({
         TableName: `${process.env.APP_NAME}-organizations`,
         Item: {
-          apiKey: { S: body.apiKey },
-          id: { S: body.orgId },
+          id: { S: orgId },
+          tokenIds: { SS: body.tokenIds },
+          currentTokenId: { S: body.tokenIds[0] },
           email: { S: body.email },
           orgName: { S: body.orgName },
           agentName: { S: body.agentName },
@@ -58,7 +62,7 @@ module.exports.handler = async (event, context) => {
         TableName: `${process.env.APP_NAME}-billings`,
         Item: {
           id: { S: Date.now().toString() },
-          orgId: { S: body.orgId },
+          orgId: { S: orgId },
           startDate: {
             S: new Date().toISOString(),
           },
@@ -85,7 +89,7 @@ module.exports.handler = async (event, context) => {
   }
 };
 
-const checkExistence = async ({ orgId, apiKey, email }) => {
+const checkExistence = async ({ orgId, email }) => {
   console.log('Checking existence...');
   const orgIdExistsPromise = dynamoDBClient.send(
     new GetItemCommand({
@@ -97,17 +101,7 @@ const checkExistence = async ({ orgId, apiKey, email }) => {
       },
     }),
   );
-  const apiKeyExistsPromise = dynamoDBClient.send(
-    new ScanCommand({
-      TableName: `${process.env.APP_NAME}-organizations`,
-      FilterExpression: 'apiKey = :apiKey',
-      ExpressionAttributeValues: {
-        ':apiKey': {
-          S: apiKey,
-        },
-      },
-    }),
-  );
+
   const emailExistsPromise = await dynamoDBClient.send(
     new ScanCommand({
       TableName: `${process.env.APP_NAME}-organizations`,
@@ -120,18 +114,10 @@ const checkExistence = async ({ orgId, apiKey, email }) => {
     }),
   );
 
-  const [orgIdExists, apiKeyExists, emailExists] = await Promise.all([
-    orgIdExistsPromise,
-    apiKeyExistsPromise,
-    emailExistsPromise,
-  ]);
+  const [orgIdExists, emailExists] = await Promise.all([orgIdExistsPromise, emailExistsPromise]);
 
   if (orgIdExists.Item) {
     throw new Error('Organization ID already exists');
-  }
-
-  if (apiKeyExists.Items.length) {
-    throw new Error('API Key already exists');
   }
 
   if (emailExists.Items.length) {
@@ -141,7 +127,7 @@ const checkExistence = async ({ orgId, apiKey, email }) => {
 
 const validateFields = (body) => {
   console.log('Verifying fields');
-  const requiredFields = ['apiKey', 'orgId', 'orgName', 'agentName', 'email', 'password'];
+  const requiredFields = ['tokenIds', 'orgName', 'agentName', 'email', 'password'];
 
   const missingFields = [];
 
@@ -154,9 +140,4 @@ const validateFields = (body) => {
   if (missingFields.length) {
     throw new Error(`Missing fields: ${missingFields.join(', ')}`);
   }
-};
-
-const verifyApiKey = async () => {
-  console.log('Verifying API Key');
-  // TODO: Verify API Key in KMS
 };
