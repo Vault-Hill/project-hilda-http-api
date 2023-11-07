@@ -49,15 +49,36 @@ provider:
           Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-billings
         - Effect: Allow
           Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-sessions
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.APP_NAME}-feedbacks
+        - Effect: Allow
+          Action:
             - s3:PutObject
             - s3:GetObject
             - s3:PutObjectAcl
           Resource: arn:aws:s3:::${self:custom.BUCKET_NAME}/*
+        - Effect: Allow
+          Action:
+            - sagemaker:InvokeEndpoint
+          Resource: arn:aws:sagemaker:${aws:region}:${aws:accountId}:endpoint/project-hilda-model-endpoint
 
   environment:
     APP_NAME: ${self:custom.APP_NAME}
     SERVICE_NAME: ${self:custom.SERVICE_NAME}
     BUCKET_NAME: ${self:custom.BUCKET_NAME}
+    MODEL_ENDPOINT_NAME: ${self:app}-model-endpoint
 
 functions:
   updateProfile:
@@ -101,3 +122,17 @@ functions:
       - httpApi:
           path: /access-key
           method: get
+  
+  prompt:
+    handler: handlers/prompt.handler
+    events:
+      - httpApi:
+          path: /prompt
+          method: post
+  
+  createFeedback:
+    handler: handlers/createFeedback.handler
+    events:
+      - httpApi:
+          path: /feedback
+          method: post

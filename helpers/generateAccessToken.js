@@ -1,7 +1,7 @@
 const cryptoJs = require('crypto-js');
 const jwt = require('jsonwebtoken');
 
-const MINUTES_BEFORE_EXPIRY = 60;
+const MINUTES_BEFORE_EXPIRY = process.env.ACCESS_EXPIRY || 120; // in minutes
 
 module.exports.generateAccessToken = (organization) => {
   console.log('Generating access token');

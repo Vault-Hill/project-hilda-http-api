@@ -23,7 +23,7 @@ module.exports.handler = async (event, context) => {
 
     const { salt, hashedPassword } = hashPassword(body.password);
 
-    const orgFolderName = body.orgName.replace(/\s/g, '_');
+    const orgFolderName = body.orgName.replace(/\s/g, '_').toLowerCase();
 
     // Create the s3 bucket
     const createBucketPromise = bucketClient.send(
